@@ -18,28 +18,27 @@ docpath = 'OpenCL.docset/Contents/Resources/Documents'
 # will replace the file path to the opencl spec
 
 def patch_pdf_link(file):
-	f = open(file, 'r')
-	filedata = f.read()
-	f.close()
-
+	with open(file, 'r') as f:
+		filedata = f.read()
 	newdata = filedata.replace("http://www.khronos.org/registry/cl/specs/","")
 
-	f = open(file, 'w')
-	f.write(newdata)
-	f.close()
+	with open(file, 'w') as f:
+		f.write(newdata)
 
 # This will parse the enum file and insert all the enums as constants
 
 def parse_enum_file(file_path):
 	prog = re.compile('CL\w+')
-	f = open(os.path.join(file_path, 'enums.html'), "r")
-	lines = f.readlines()
-	f.close()
-
+	with open(os.path.join(file_path, 'enums.html'), "r") as f:
+		lines = f.readlines()
 	for line in lines:
 		enum = prog.search(line)
 		if enum != None:
-			cur.execute('INSERT OR IGNORE INTO searchIndex(name, type, path) VALUES (?,?,?)', (enum.group(0), 'Constant', 'enums.html'))
+			cur.execute(
+				'INSERT OR IGNORE INTO searchIndex(name, type, path) VALUES (?,?,?)',
+				(enum[0], 'Constant', 'enums.html'),
+			)
+
 
 	return
 
@@ -76,10 +75,7 @@ file_skip_list = ["abstractDataTypes", "accessQualifiers", "asyncCopyFunctions",
 # Check if file represents a function and should be added to the function list
 
 def is_file_function(name):
-	for skip_file in file_skip_list:
-		if name.find(skip_file) != -1:
-			return False;
-	return True;
+	return all(name.find(skip_file) == -1 for skip_file in file_skip_list)
 
 # Handle all thefunctions
 
